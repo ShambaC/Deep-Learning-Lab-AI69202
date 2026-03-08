@@ -2,7 +2,7 @@
 # # Installs
 
 # %%
-! pip install -q ucimlrepo ipywidgets
+# ! pip install -q ucimlrepo ipywidgets
 
 # %% [markdown]
 # # Imports
