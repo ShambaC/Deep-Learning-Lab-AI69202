@@ -256,6 +256,7 @@ dependencies = [
     { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "torch", version = "2.10.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "torch-summary" },
+    { name = "torchattack" },
     { name = "torchvision", version = "0.25.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "torchvision", version = "0.25.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "tqdm" },
@@ -277,6 +278,7 @@ requires-dist = [
     { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'", specifier = ">=2.10.0" },
     { name = "torch", marker = "sys_platform == 'linux' or sys_platform == 'win32'", specifier = ">=2.10.0", index = "https://download.pytorch.org/whl/cu130" },
     { name = "torch-summary", specifier = ">=1.4.5" },
+    { name = "torchattack", specifier = ">=1.7.2" },
     { name = "torchvision", marker = "sys_platform != 'linux' and sys_platform != 'win32'", specifier = ">=0.25.0" },
     { name = "torchvision", marker = "sys_platform == 'linux' or sys_platform == 'win32'", specifier = ">=0.25.0", index = "https://download.pytorch.org/whl/cu130" },
     { name = "tqdm", specifier = ">=4.67.3" },
@@ -1480,6 +1482,22 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ff/2f/57cb3b23bccae7fc639ab7ff8bb78c80f03e8c0a144bbc69bfd26b0757f7/torch_summary-1.4.5.tar.gz", hash = "sha256:44eac21777dbbda7b8404d57a43c09d83fd9c93d0c1f0c960b5083ccb24d6d21", size = 17228, upload-time = "2020-12-24T05:00:32.266Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ca/db/93d18c84f73b214acfa4d18051d6f4263eee3e044c408928e8abe941a22c/torch_summary-1.4.5-py3-none-any.whl", hash = "sha256:6127efb631f34ba8cbd28e92e8f7ddc2903ea0cbc44c80f15b7363b8f558cd8c", size = 16161, upload-time = "2020-12-24T05:00:30.969Z" },
+]
+
+[[package]]
+name = "torchattack"
+version = "1.7.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "torch", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
+    { name = "torch", version = "2.10.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "torchvision", version = "0.25.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
+    { name = "torchvision", version = "0.25.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/39/60/d31fc4262bad841b0767c5991aa5e0eca5150fb221761d8e88ba91e8958d/torchattack-1.7.2.tar.gz", hash = "sha256:352e00d3f65172b7891fcbeafbff1ad94e740b665be2d45f24ae5e3bedce9db6", size = 77400, upload-time = "2025-12-22T09:33:37.244Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/27/10/6e2507a5f158526ae287c70f5559bef89fdf30a1e69f1a59b2ce1783dba4/torchattack-1.7.2-py3-none-any.whl", hash = "sha256:d9219527f96f621348c0c0196fea067224a16876e8982199710495f9f5799862", size = 116114, upload-time = "2025-12-22T09:33:35.732Z" },
 ]
 
 [[package]]
