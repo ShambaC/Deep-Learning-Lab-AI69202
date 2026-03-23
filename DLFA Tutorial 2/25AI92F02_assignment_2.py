@@ -17,7 +17,7 @@ from torch.utils.data import random_split
 from PIL import Image
 
 import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, precision_score, recall_score
 
 import numpy as np
 
@@ -260,14 +260,18 @@ def evaluate_model(model, test_loader):
 
     accuracy = accuracy_score(all_labels, all_preds)
     f1 = f1_score(all_labels, all_preds, average='weighted')
+    precision = precision_score(all_labels, all_preds, average='weighted')
+    recall = recall_score(all_labels, all_preds, average='weighted')
     confusion_mat = confusion_matrix(all_labels, all_preds)
 
-    return accuracy, f1, confusion_mat, all_preds, all_labels
+    return accuracy, f1, precision, recall, confusion_mat, all_preds, all_labels
 
 # Evaluate the model
-test_accuracy, test_f1, confusion_mat, all_preds, all_labels = evaluate_model(model, test_loader)
+test_accuracy, test_f1, test_precision, test_recall, confusion_mat, all_preds, all_labels = evaluate_model(model, test_loader)
 print(f"Test Accuracy: {test_accuracy:.4f}")
 print(f"Test F1 Score: {test_f1:.4f}")
+print(f"Test Precision: {test_precision:.4f}")
+print(f"Test Recall: {test_recall:.4f}")
 print(f"Confusion Matrix:\n{confusion_mat}")
 
 # %% [markdown]
@@ -429,9 +433,11 @@ def evaluate_model_adversarial(model, test_loader):
 
     accuracy = accuracy_score(all_labels, all_preds)
     f1 = f1_score(all_labels, all_preds, average='weighted')
+    precision = precision_score(all_labels, all_preds, average='weighted')
+    recall = recall_score(all_labels, all_preds, average='weighted')
     confusion_mat = confusion_matrix(all_labels, all_preds)
 
-    return accuracy, f1, confusion_mat, all_preds, all_labels
+    return accuracy, f1, precision, recall, confusion_mat, all_preds, all_labels
 
 
 # Evaluate model on adversarial data
@@ -439,10 +445,12 @@ adv_images, adv_labels = generate_adversarial_dataset(model, test_loader, device
 adv_dataset = data.TensorDataset(adv_images, adv_labels)
 adv_loader = data.DataLoader(adv_dataset, batch_size=1, shuffle=False)
 
-adv_accuracy, adv_f1, adv_confusion, adv_preds, adv_labels = evaluate_model_adversarial(model, adv_loader)
+adv_accuracy, adv_f1, adv_precision, adv_recall, adv_confusion, adv_preds, adv_labels = evaluate_model_adversarial(model, adv_loader)
 
 print(f"Adversarial Accuracy: {adv_accuracy:.4f}")
 print(f"Adversarial F1 Score: {adv_f1:.4f}")
+print(f"Adversarial Precision: {adv_precision:.4f}")
+print(f"Adversarial Recall: {adv_recall:.4f}")
 print(f"Adversarial Confusion Matrix:\n{adv_confusion}")
 
 # %% [markdown]
@@ -503,10 +511,12 @@ adv_dataset = data.TensorDataset(adv_images, adv_labels)
 adv_loader = data.DataLoader(adv_dataset, batch_size=1, shuffle=False)
 
 # Evaluate on adversarial samples
-adv_accuracy_torch, adv_f1_torch, adv_confusion_torch, adv_preds_torch, adv_labels_torch = evaluate_model_adversarial(model, adv_loader)
+adv_accuracy_torch, adv_f1_torch, adv_precision_torch, adv_recall_torch, adv_confusion_torch, adv_preds_torch, adv_labels_torch = evaluate_model_adversarial(model, adv_loader)
 
 print(f"Adversarial Accuracy (torchattacks): {adv_accuracy_torch:.4f}")
 print(f"Adversarial F1 Score (torchattacks): {adv_f1_torch:.4f}")
+print(f"Adversarial Precision (torchattacks): {adv_precision_torch:.4f}")
+print(f"Adversarial Recall (torchattacks): {adv_recall_torch:.4f}")
 print(f"Adversarial Confusion Matrix:\n{adv_confusion_torch}")
 
 # %% [markdown]
