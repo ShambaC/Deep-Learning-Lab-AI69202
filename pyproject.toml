@@ -16,6 +16,7 @@ dependencies = [
     "torch>=2.10.0",
     "torch-summary>=1.4.5",
     "torchattack>=1.7.2",
+    "torchtext>=0.18.0",
     "torchvision>=0.25.0",
     "tqdm>=4.67.3",
     "ucimlrepo>=0.0.7",
