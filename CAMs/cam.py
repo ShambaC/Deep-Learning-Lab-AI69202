@@ -199,7 +199,7 @@ class CAMCNN(nn.Module):
 model = CAMCNN(num_classes=10).to(DEVICE)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.AdamW(model.parameters(), lr=3e-4, weight_decay=1e-4)
-scaler = torch.cuda.amp.GradScaler(enabled=USE_AMP)
+scaler = torch.amp.GradScaler(DEVICE.type, enabled=USE_AMP)
 
 num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print(model)
@@ -229,7 +229,7 @@ for epoch in range(EPOCHS):
 
         optimizer.zero_grad(set_to_none=True)
 
-        with torch.cuda.amp.autocast(enabled=USE_AMP):
+        with torch.amp.autocast(device_type=DEVICE.type, enabled=USE_AMP):
             logits = model(images)
             loss = criterion(logits, labels)
 
@@ -385,5 +385,110 @@ plt.show()
 checkpoint_path = Path("./runtime_data") / "cam_cnn_cifar10.pth"
 torch.save(model.state_dict(), checkpoint_path)
 print(f"Model saved to: {checkpoint_path.resolve()}")
+
+# %% [markdown]
+# ## Grad-CAM Utilities and Visualization
+# 
+# This section adds gradient-based class activation mapping (Grad-CAM) using the last convolution layer (`model.block3.conv`).
+
+# %%
+class GradCAM:
+    def __init__(self, model, target_layer):
+        self.model = model
+        self.target_layer = target_layer
+        self.activations = None
+        self.gradients = None
+
+        self.forward_handle = self.target_layer.register_forward_hook(self._forward_hook)
+        self.backward_handle = self.target_layer.register_full_backward_hook(self._backward_hook)
+
+    def _forward_hook(self, *hook_args):
+        output = hook_args[2]
+        self.activations = output.detach()
+
+    def _backward_hook(self, *hook_args):
+        grad_output = hook_args[2]
+        self.gradients = grad_output[0].detach()
+
+    def __call__(self, input_tensor, class_idx=None):
+        self.model.eval()
+        self.model.zero_grad(set_to_none=True)
+
+        logits = self.model(input_tensor)
+        probs = torch.softmax(logits, dim=1)
+
+        if class_idx is None:
+            class_idx = int(torch.argmax(logits, dim=1).item())
+
+        score = logits[:, class_idx].sum()
+        score.backward()
+
+        # Global-average pooled gradients provide channel importance weights.
+        weights = self.gradients.mean(dim=(2, 3), keepdim=True)
+        grad_cam = torch.sum(weights * self.activations, dim=1, keepdim=True)
+        grad_cam = torch.relu(grad_cam)
+
+        grad_cam = torch.nn.functional.interpolate(
+            grad_cam,
+            size=input_tensor.shape[-2:],
+            mode="bilinear",
+            align_corners=False,
+        )
+
+        grad_cam = grad_cam.squeeze(0).squeeze(0)
+        grad_cam_min, grad_cam_max = grad_cam.min(), grad_cam.max()
+        grad_cam = (grad_cam - grad_cam_min) / (grad_cam_max - grad_cam_min + 1e-8)
+
+        return grad_cam.detach().cpu().numpy(), probs.squeeze(0).detach().cpu().numpy(), class_idx
+
+    def close(self):
+        self.forward_handle.remove()
+        self.backward_handle.remove()
+
+# %%
+# Compare CAM vs Grad-CAM overlays
+num_samples = 8
+sample_indices = np.random.choice(len(test_dataset), size=num_samples, replace=False)
+
+grad_cam_extractor = GradCAM(model, model.block3.conv)
+
+fig, axes = plt.subplots(num_samples, 4, figsize=(16, 3 * num_samples))
+if num_samples == 1:
+    axes = np.expand_dims(axes, axis=0)
+
+for row, idx in enumerate(sample_indices):
+    img, true_label = test_dataset[idx]
+    input_tensor = img.unsqueeze(0).to(DEVICE)
+
+    cam_map, probs, pred_idx = generate_cam(model, input_tensor)
+    gradcam_map, _, _ = grad_cam_extractor(input_tensor, class_idx=pred_idx)
+
+    denorm_img = denormalize(img.to(DEVICE), mean, std).cpu()
+
+    cam_overlay_img, _ = cam_overlay(denorm_img, cam_map, alpha=0.45)
+    grad_overlay_img, grad_up = cam_overlay(denorm_img, gradcam_map, alpha=0.45)
+
+    axes[row, 0].imshow(denorm_img.permute(1, 2, 0).numpy())
+    axes[row, 0].set_title(f"Original\nTrue: {class_names[true_label]}")
+    axes[row, 0].axis("off")
+
+    axes[row, 1].imshow(cam_overlay_img)
+    axes[row, 1].set_title(f"CAM Overlay\nPred: {class_names[pred_idx]}")
+    axes[row, 1].axis("off")
+
+    axes[row, 2].imshow(grad_up, cmap="jet")
+    axes[row, 2].set_title("Grad-CAM Heatmap")
+    axes[row, 2].axis("off")
+
+    axes[row, 3].imshow(grad_overlay_img)
+    axes[row, 3].set_title(
+        f"Grad-CAM Overlay\nPred: {class_names[pred_idx]} ({probs[pred_idx] * 100:.1f}%)"
+    )
+    axes[row, 3].axis("off")
+
+plt.tight_layout()
+plt.show()
+
+grad_cam_extractor.close()
 
 
